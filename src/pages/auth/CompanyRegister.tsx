@@ -1,17 +1,21 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Building2, Eye, EyeOff, ArrowRight, Briefcase, Mail, Lock, User, Globe } from "lucide-react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Building2, Eye, EyeOff, ArrowRight, Briefcase, Mail, Lock, Globe, Loader2 } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const CompanyRegister = () => {
-  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { signUp, signInWithGoogle, user, isLoading: authLoading } = useAuth();
+  const { toast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
-  const [step, setStep] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     companyName: "",
     email: "",
@@ -20,15 +24,81 @@ const CompanyRegister = () => {
     confirmPassword: ""
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (step === 1) {
-      setStep(2);
-    } else {
-      // Handle registration
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user && !authLoading) {
       navigate("/company/dashboard");
     }
+  }, [user, authLoading, navigate]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (formData.password !== formData.confirmPassword) {
+      toast({
+        title: "Passwords don't match",
+        description: "Please ensure both passwords are the same.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      toast({
+        title: "Password too short",
+        description: "Password must be at least 6 characters.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsLoading(true);
+
+    // Sign up user
+    const { error: signUpError } = await signUp(formData.email, formData.password, {
+      full_name: formData.companyName
+    });
+    
+    if (signUpError) {
+      toast({
+        title: "Registration failed",
+        description: signUpError.message,
+        variant: "destructive"
+      });
+      setIsLoading(false);
+      return;
+    }
+
+    toast({
+      title: "Registration successful!",
+      description: "Please check your email to verify your account before signing in."
+    });
+
+    navigate("/auth/login");
+    setIsLoading(false);
   };
+
+  const handleGoogleSignIn = async () => {
+    setIsLoading(true);
+    const { error } = await signInWithGoogle();
+    
+    if (error) {
+      toast({
+        title: "Google sign in failed",
+        description: error.message,
+        variant: "destructive"
+      });
+      setIsLoading(false);
+    }
+  };
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-accent" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -108,129 +178,153 @@ const CompanyRegister = () => {
 
           <Card variant="flat" className="border-0">
             <CardHeader className="px-0">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="flex items-center gap-2">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${step >= 1 ? 'bg-accent text-accent-foreground' : 'bg-muted text-muted-foreground'}`}>
-                    1
-                  </div>
-                  <div className={`w-12 h-1 rounded-full ${step >= 2 ? 'bg-accent' : 'bg-muted'}`} />
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${step >= 2 ? 'bg-accent text-accent-foreground' : 'bg-muted text-muted-foreground'}`}>
-                    2
-                  </div>
-                </div>
-              </div>
-              <CardTitle className="text-2xl">
-                {step === 1 ? "Create Company Account" : "Verify Your Domain"}
-              </CardTitle>
+              <CardTitle className="text-2xl">Create Company Account</CardTitle>
               <CardDescription>
-                {step === 1 
-                  ? "Enter your company details to get started" 
-                  : "We'll verify your company email domain"
-                }
+                Enter your company details to get started
               </CardDescription>
             </CardHeader>
 
             <CardContent className="px-0">
-              <form onSubmit={handleSubmit} className="space-y-5">
-                {step === 1 ? (
-                  <>
-                    <div className="space-y-2">
-                      <Label htmlFor="companyName">Company Name</Label>
-                      <div className="relative">
-                        <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <Input
-                          id="companyName"
-                          placeholder="Acme Corporation"
-                          className="pl-10"
-                          value={formData.companyName}
-                          onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
-                          required
-                        />
-                      </div>
-                    </div>
+              {/* Google Sign In */}
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full mb-6"
+                size="lg"
+                onClick={handleGoogleSignIn}
+                disabled={isLoading}
+              >
+                <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
+                  <path
+                    fill="currentColor"
+                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                  />
+                  <path
+                    fill="currentColor"
+                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                  />
+                  <path
+                    fill="currentColor"
+                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                  />
+                  <path
+                    fill="currentColor"
+                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                  />
+                </svg>
+                Continue with Google
+              </Button>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Official Email</Label>
-                      <div className="relative">
-                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <Input
-                          id="email"
-                          type="email"
-                          placeholder="hr@company.com"
-                          className="pl-10"
-                          value={formData.email}
-                          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                          required
-                        />
-                      </div>
-                    </div>
+              <div className="relative mb-6">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-2 text-muted-foreground">
+                    Or continue with email
+                  </span>
+                </div>
+              </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="domain">Company Domain</Label>
-                      <div className="relative">
-                        <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <Input
-                          id="domain"
-                          placeholder="company.com"
-                          className="pl-10"
-                          value={formData.domain}
-                          onChange={(e) => setFormData({ ...formData, domain: e.target.value })}
-                          required
-                        />
-                      </div>
-                    </div>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="companyName">Company Name</Label>
+                  <div className="relative">
+                    <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      id="companyName"
+                      placeholder="Acme Corporation"
+                      className="pl-10"
+                      value={formData.companyName}
+                      onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
+                      required
+                      disabled={isLoading}
+                    />
+                  </div>
+                </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="password">Password</Label>
-                      <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <Input
-                          id="password"
-                          type={showPassword ? "text" : "password"}
-                          placeholder="••••••••"
-                          className="pl-10 pr-10"
-                          value={formData.password}
-                          onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                          required
-                        />
-                        <button
-                          type="button"
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                          onClick={() => setShowPassword(!showPassword)}
-                        >
-                          {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                        </button>
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="p-4 rounded-xl bg-accent/10 border border-accent/20">
-                      <p className="text-sm text-foreground">
-                        We've sent a verification code to <strong>{formData.email}</strong>
-                      </p>
-                    </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email">Official Email</Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="hr@company.com"
+                      className="pl-10"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      required
+                      disabled={isLoading}
+                    />
+                  </div>
+                </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="otp">Verification Code</Label>
-                      <Input
-                        id="otp"
-                        placeholder="Enter 6-digit code"
-                        className="text-center text-lg tracking-widest"
-                        maxLength={6}
-                        required
-                      />
-                    </div>
+                <div className="space-y-2">
+                  <Label htmlFor="domain">Company Domain</Label>
+                  <div className="relative">
+                    <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      id="domain"
+                      placeholder="company.com"
+                      className="pl-10"
+                      value={formData.domain}
+                      onChange={(e) => setFormData({ ...formData, domain: e.target.value })}
+                      disabled={isLoading}
+                    />
+                  </div>
+                </div>
 
-                    <button type="button" className="text-sm text-accent hover:underline">
-                      Resend verification code
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="••••••••"
+                      className="pl-10 pr-10"
+                      value={formData.password}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      required
+                      disabled={isLoading}
+                    />
+                    <button
+                      type="button"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
-                  </>
-                )}
+                  </div>
+                </div>
 
-                <Button type="submit" variant="hero" className="w-full" size="lg">
-                  {step === 1 ? "Continue" : "Complete Registration"}
-                  <ArrowRight className="w-4 h-4 ml-1" />
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword">Confirm Password</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      id="confirmPassword"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="••••••••"
+                      className="pl-10"
+                      value={formData.confirmPassword}
+                      onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                      required
+                      disabled={isLoading}
+                    />
+                  </div>
+                </div>
+
+                <Button type="submit" variant="hero" className="w-full" size="lg" disabled={isLoading}>
+                  {isLoading ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <>
+                      Create Account
+                      <ArrowRight className="w-4 h-4 ml-1" />
+                    </>
+                  )}
                 </Button>
               </form>
 
