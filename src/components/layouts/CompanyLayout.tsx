@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { 
   LayoutDashboard, 
@@ -14,10 +14,11 @@ import {
   Search,
   Plus
 } from "lucide-react";
-import { Link, useLocation, Outlet } from "react-router-dom";
+import { Link, useLocation, Outlet, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
 
 const navigation = [
   { name: "Dashboard", href: "/company/dashboard", icon: LayoutDashboard },
@@ -32,6 +33,33 @@ const navigation = [
 const CompanyLayout = () => {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, isLoading, signOut, isAdmin } = useAuth();
+
+  useEffect(() => {
+    if (!isLoading && !user) {
+      navigate("/auth/login");
+    } else if (!isLoading && isAdmin) {
+      navigate("/admin/dashboard");
+    }
+  }, [user, isLoading, isAdmin, navigate]);
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-4 border-accent border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-background flex w-full">
@@ -95,13 +123,13 @@ const CompanyLayout = () => {
             <ChevronLeft className={cn("w-5 h-5 transition-transform", collapsed && "rotate-180")} />
             {!collapsed && <span className="text-sm">Collapse</span>}
           </button>
-          <Link
-            to="/"
+          <button
+            onClick={handleSignOut}
             className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-destructive/20 transition-colors"
           >
             <LogOut className="w-5 h-5" />
             {!collapsed && <span className="text-sm">Logout</span>}
-          </Link>
+          </button>
         </div>
       </motion.aside>
 
@@ -131,7 +159,9 @@ const CompanyLayout = () => {
               </Link>
             </Button>
             <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center">
-              <span className="text-sm font-medium">AC</span>
+              <span className="text-sm font-medium">
+                {user.email?.charAt(0).toUpperCase()}
+              </span>
             </div>
           </div>
         </header>

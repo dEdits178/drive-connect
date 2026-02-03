@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Building2, GraduationCap, Shield, ArrowRight, Briefcase, Users, TrendingUp } from "lucide-react";
+import { Building2, ArrowRight, Briefcase, TrendingUp } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -107,81 +107,59 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Role Selection Cards */}
+      {/* Role Selection Cards - Company Only */}
       <section className="py-20 px-6 bg-muted/30" id="features">
-        <div className="container mx-auto max-w-6xl">
+        <div className="container mx-auto max-w-4xl">
           <motion.div 
             className="text-center mb-12"
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-3xl font-bold mb-4">Choose Your Portal</h2>
+            <h2 className="text-3xl font-bold mb-4">For Companies</h2>
             <p className="text-muted-foreground max-w-xl mx-auto">
-              Select your role to access tailored features designed for your recruitment needs
+              Access powerful tools to streamline your campus recruitment process
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-3 gap-6">
-            {[
-              {
-                icon: Building2,
-                title: "Company Portal",
-                description: "Create hiring drives, manage campus recruitment, and track selections across multiple colleges.",
-                features: ["Create Hiring Drives", "College Selection", "Test & Interview Scheduling", "Offer Management"],
-                link: "/auth/register?role=company",
-                color: "accent"
-              },
-              {
-                icon: GraduationCap,
-                title: "College Portal",
-                description: "Manage drive requests, coordinate with TPO, and help students find their dream jobs.",
-                features: ["Drive Management", "Student Coordination", "Placement Reports", "Company Communication"],
-                link: "/auth/register?role=college",
-                color: "secondary"
-              },
-              {
-                icon: Shield,
-                title: "Admin Portal",
-                description: "Oversee all activities, manage colleges & companies, and ensure smooth operations.",
-                features: ["Full Oversight", "User Management", "Analytics Dashboard", "Stage Control"],
-                link: "/auth/login?role=admin",
-                color: "primary"
-              }
-            ].map((portal, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-              >
-                <Card variant="interactive" className="h-full">
-                  <CardContent className="p-6">
-                    <div className={`w-12 h-12 rounded-xl bg-${portal.color}/10 flex items-center justify-center mb-4`}>
-                      <portal.icon className={`w-6 h-6 text-${portal.color}`} />
-                    </div>
-                    <h3 className="text-xl font-semibold mb-2">{portal.title}</h3>
-                    <p className="text-muted-foreground text-sm mb-4">{portal.description}</p>
-                    <ul className="space-y-2 mb-6">
-                      {portal.features.map((feature, j) => (
-                        <li key={j} className="flex items-center gap-2 text-sm">
-                          <div className="w-1.5 h-1.5 rounded-full bg-accent" />
-                          {feature}
-                        </li>
-                      ))}
-                    </ul>
-                    <Button variant="outline" className="w-full" asChild>
-                      <Link to={portal.link}>
-                        Enter Portal
-                        <ArrowRight className="w-4 h-4 ml-1" />
-                      </Link>
-                    </Button>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
+            <Card variant="interactive" className="max-w-2xl mx-auto">
+              <CardContent className="p-8">
+                <div className="w-14 h-14 rounded-xl bg-accent/10 flex items-center justify-center mb-6">
+                  <Building2 className="w-7 h-7 text-accent" />
+                </div>
+                <h3 className="text-2xl font-semibold mb-3">Company Portal</h3>
+                <p className="text-muted-foreground mb-6">
+                  Create hiring drives, manage campus recruitment, and track selections across multiple colleges.
+                </p>
+                <ul className="grid grid-cols-2 gap-3 mb-8">
+                  {[
+                    "Create Hiring Drives",
+                    "College Selection",
+                    "Test & Interview Scheduling",
+                    "Offer Management",
+                    "Candidate Tracking",
+                    "Analytics Dashboard"
+                  ].map((feature, j) => (
+                    <li key={j} className="flex items-center gap-2 text-sm">
+                      <div className="w-1.5 h-1.5 rounded-full bg-accent" />
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+                <Button variant="hero" size="lg" className="w-full" asChild>
+                  <Link to="/auth/register">
+                    Get Started
+                    <ArrowRight className="w-4 h-4 ml-1" />
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          </motion.div>
         </div>
       </section>
 
@@ -268,6 +246,9 @@ const Landing = () => {
               <a href="#" className="hover:text-foreground transition-colors">Privacy Policy</a>
               <a href="#" className="hover:text-foreground transition-colors">Terms of Service</a>
               <a href="#" className="hover:text-foreground transition-colors">Contact</a>
+              <Link to="/admin/login" className="hover:text-foreground transition-colors text-xs opacity-50">
+                Admin
+              </Link>
             </div>
             <p className="text-sm text-muted-foreground">
               © 2024 PlaceHub. All rights reserved.
