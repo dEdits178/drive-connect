@@ -1,4 +1,4 @@
-import { ReactNode, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, Outlet, Link, useLocation } from "react-router-dom";
 import { 
   LayoutDashboard, 
@@ -11,9 +11,9 @@ import {
   Shield,
   Menu,
   X,
-  ChevronRight
+  ChevronRight,
+  Mail
 } from "lucide-react";
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
@@ -39,6 +39,7 @@ const AdminLayout = () => {
 
   const navItems = [
     { icon: LayoutDashboard, label: "Dashboard", path: "/admin/dashboard" },
+    { icon: Mail, label: "Admin Emails", path: "/admin/emails" },
     { icon: Building2, label: "Companies", path: "/admin/companies" },
     { icon: GraduationCap, label: "Colleges", path: "/admin/colleges" },
     { icon: Briefcase, label: "Drives", path: "/admin/drives" },
@@ -66,7 +67,7 @@ const AdminLayout = () => {
           <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
             <Shield className="w-4 h-4 text-primary-foreground" />
           </div>
-          <span className="font-semibold">Admin Portal</span>
+          <span className="font-semibold">Freshbit Admin</span>
         </div>
         <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(!sidebarOpen)}>
           {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -84,7 +85,7 @@ const AdminLayout = () => {
             <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
               <Shield className="w-4 h-4 text-primary-foreground" />
             </div>
-            <span className="font-semibold">Admin Portal</span>
+            <span className="font-semibold">Freshbit Admin</span>
           </div>
 
           {/* Navigation */}

@@ -28,7 +28,7 @@ const Landing = () => {
             <div className="w-8 h-8 rounded-lg bg-gradient-accent flex items-center justify-center">
               <Briefcase className="w-4 h-4 text-accent-foreground" />
             </div>
-            <span className="font-semibold text-lg">PlaceHub</span>
+            <span className="font-semibold text-lg">Freshbit</span>
           </div>
           <nav className="hidden md:flex items-center gap-8">
             <a href="#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Features</a>
@@ -220,7 +220,7 @@ const Landing = () => {
               Ready to Transform Your Recruitment?
             </h2>
             <p className="text-primary-foreground/80 mb-8 max-w-xl mx-auto">
-              Join hundreds of companies and colleges already using PlaceHub for seamless campus recruitment.
+              Join hundreds of companies and colleges already using Freshbit for seamless campus recruitment.
             </p>
             <Button variant="hero" size="xl" asChild>
               <Link to="/auth/register">
@@ -240,7 +240,7 @@ const Landing = () => {
               <div className="w-8 h-8 rounded-lg bg-gradient-accent flex items-center justify-center">
                 <Briefcase className="w-4 h-4 text-accent-foreground" />
               </div>
-              <span className="font-semibold">PlaceHub</span>
+              <span className="font-semibold">Freshbit</span>
             </div>
             <div className="flex items-center gap-6 text-sm text-muted-foreground">
               <a href="#" className="hover:text-foreground transition-colors">Privacy Policy</a>
@@ -251,7 +251,7 @@ const Landing = () => {
               </Link>
             </div>
             <p className="text-sm text-muted-foreground">
-              © 2024 PlaceHub. All rights reserved.
+              © 2024 Freshbit. All rights reserved.
             </p>
           </div>
         </div>
