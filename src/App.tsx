@@ -16,12 +16,14 @@ import NotFound from "./pages/NotFound";
 import CompanyLayout from "./components/layouts/CompanyLayout";
 import CompanyDashboard from "./pages/company/Dashboard";
 import DrivesList from "./pages/company/DrivesList";
+import DriveDetails from "./pages/company/DriveDetails";
 import CreateDrive from "./pages/company/CreateDrive";
 import CollegeSelection from "./pages/company/CollegeSelection";
 
 // Admin Pages
 import AdminLayout from "./components/layouts/AdminLayout";
 import AdminDashboard from "./pages/admin/Dashboard";
+import AdminEmails from "./pages/admin/AdminEmails";
 
 const queryClient = new QueryClient();
 
@@ -46,6 +48,8 @@ const App = () => (
               <Route path="dashboard" element={<CompanyDashboard />} />
               <Route path="drives" element={<DrivesList />} />
               <Route path="drives/new" element={<CreateDrive />} />
+              <Route path="drives/:id" element={<DriveDetails />} />
+              <Route path="colleges" element={<CollegeSelection />} />
               <Route path="colleges" element={<CollegeSelection />} />
               <Route path="applications" element={<PlaceholderPage title="Applications" />} />
               <Route path="candidates" element={<PlaceholderPage title="Candidates" />} />
@@ -56,6 +60,7 @@ const App = () => (
             {/* Admin Routes */}
             <Route path="/admin" element={<AdminLayout />}>
               <Route path="dashboard" element={<AdminDashboard />} />
+              <Route path="emails" element={<AdminEmails />} />
               <Route path="companies" element={<PlaceholderPage title="Companies Management" />} />
               <Route path="colleges" element={<PlaceholderPage title="Colleges Management" />} />
               <Route path="drives" element={<PlaceholderPage title="All Drives" />} />
