@@ -12,13 +12,16 @@ import {
   LogOut,
   Bell,
   Search,
-  Plus
+  Plus,
+  Moon,
+  Sun
 } from "lucide-react";
 import { Link, useLocation, Outlet, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
+import { useTheme } from "@/hooks/useTheme";
 
 const navigation = [
   { name: "Dashboard", href: "/company/dashboard", icon: LayoutDashboard },
@@ -35,6 +38,7 @@ const CompanyLayout = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, isLoading, signOut, isAdmin } = useAuth();
+  const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -79,7 +83,7 @@ const CompanyLayout = () => {
               <div className="w-8 h-8 rounded-lg bg-sidebar-primary flex items-center justify-center">
                 <Briefcase className="w-4 h-4 text-sidebar-primary-foreground" />
               </div>
-              <span className="font-semibold text-sidebar-foreground">PlaceHub</span>
+              <span className="font-semibold text-sidebar-foreground">Freshbit</span>
             </Link>
           )}
           {collapsed && (
@@ -148,7 +152,10 @@ const CompanyLayout = () => {
           </div>
 
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon-sm" className="relative">
+            <Button variant="ghost" size="icon" onClick={toggleTheme}>
+              {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </Button>
+            <Button variant="ghost" size="icon" className="relative">
               <Bell className="w-5 h-5" />
               <span className="absolute top-1 right-1 w-2 h-2 bg-accent rounded-full" />
             </Button>
