@@ -24,6 +24,7 @@ import CollegeSelection from "./pages/company/CollegeSelection";
 import AdminLayout from "./components/layouts/AdminLayout";
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminEmails from "./pages/admin/AdminEmails";
+import AdminColleges from "./pages/admin/AdminColleges";
 
 const queryClient = new QueryClient();
 
@@ -62,7 +63,7 @@ const App = () => (
               <Route path="dashboard" element={<AdminDashboard />} />
               <Route path="emails" element={<AdminEmails />} />
               <Route path="companies" element={<PlaceholderPage title="Companies Management" />} />
-              <Route path="colleges" element={<PlaceholderPage title="Colleges Management" />} />
+              <Route path="colleges" element={<AdminColleges />} />
               <Route path="drives" element={<PlaceholderPage title="All Drives" />} />
               <Route path="users" element={<PlaceholderPage title="Users Management" />} />
               <Route path="settings" element={<PlaceholderPage title="Admin Settings" />} />

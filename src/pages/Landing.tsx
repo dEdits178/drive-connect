@@ -1,8 +1,9 @@
 import { motion } from "framer-motion";
-import { Building2, ArrowRight, Briefcase, TrendingUp } from "lucide-react";
+import { Building2, ArrowRight, Briefcase, TrendingUp, Moon, Sun } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { useTheme } from "@/hooks/useTheme";
 
 const fadeUp = {
   initial: { opacity: 0, y: 20 },
@@ -19,6 +20,8 @@ const stagger = {
 };
 
 const Landing = () => {
+  const { theme, toggleTheme } = useTheme();
+  
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -36,6 +39,9 @@ const Landing = () => {
             <a href="#contact" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Contact</a>
           </nav>
           <div className="flex items-center gap-3">
+            <Button variant="ghost" size="icon" onClick={toggleTheme}>
+              {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </Button>
             <Button variant="ghost" size="sm" asChild>
               <Link to="/auth/login">Sign In</Link>
             </Button>
@@ -46,8 +52,8 @@ const Landing = () => {
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="pt-32 pb-20 px-6">
+      {/* Hero Section with Dark Gradient */}
+      <section className="pt-32 pb-20 px-6 bg-gradient-to-b from-primary/5 via-background to-background dark:from-primary/20 dark:via-background dark:to-background">
         <div className="container mx-auto max-w-6xl">
           <motion.div 
             className="text-center max-w-3xl mx-auto"
@@ -96,7 +102,7 @@ const Landing = () => {
             ].map((stat, i) => (
               <motion.div 
                 key={i}
-                className="text-center p-6 rounded-xl bg-card border border-border"
+                className="text-center p-6 rounded-xl bg-card border border-border shadow-sm"
                 variants={fadeUp}
               >
                 <div className="text-3xl font-bold text-accent mb-1">{stat.value}</div>
@@ -108,7 +114,7 @@ const Landing = () => {
       </section>
 
       {/* Role Selection Cards - Company Only */}
-      <section className="py-20 px-6 bg-muted/30" id="features">
+      <section className="py-20 px-6 bg-muted/30 dark:bg-primary/5" id="features">
         <div className="container mx-auto max-w-4xl">
           <motion.div 
             className="text-center mb-12"
@@ -209,7 +215,7 @@ const Landing = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-6 bg-primary">
+      <section className="py-20 px-6 bg-primary dark:bg-primary/90">
         <div className="container mx-auto max-w-4xl text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}

@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { 
   ArrowUpRight, 
@@ -6,15 +7,16 @@ import {
   Building2, 
   Users, 
   Calendar,
-  CheckCircle2,
   Clock,
   FileText,
-  TrendingUp
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { supabase } from "@/integrations/supabase/client";
+import { useCompany } from "@/hooks/useCompany";
+import { Tables } from "@/integrations/supabase/types";
 
 const fadeUp = {
   initial: { opacity: 0, y: 20 },
@@ -22,68 +24,65 @@ const fadeUp = {
 };
 
 const CompanyDashboard = () => {
+  const { company, isLoading: companyLoading } = useCompany();
+  const [drives, setDrives] = useState<Tables<"hiring_drives">[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (company) {
+      fetchDrives();
+    }
+  }, [company]);
+
+  const fetchDrives = async () => {
+    if (!company) return;
+    
+    setIsLoading(true);
+    const { data, error } = await supabase
+      .from("hiring_drives")
+      .select("*")
+      .eq("company_id", company.id)
+      .order("created_at", { ascending: false })
+      .limit(5);
+
+    if (!error && data) {
+      setDrives(data);
+    }
+    setIsLoading(false);
+  };
+
   const stats = [
     { 
       label: "Active Drives", 
-      value: "12", 
-      change: "+3", 
+      value: drives.filter(d => d.status === "active").length.toString(), 
+      change: `+${drives.length}`, 
       trend: "up", 
       icon: Briefcase,
       color: "accent"
     },
     { 
-      label: "Colleges Engaged", 
-      value: "48", 
-      change: "+12", 
+      label: "Total Drives", 
+      value: drives.length.toString(), 
+      change: "", 
       trend: "up", 
       icon: Building2,
       color: "primary"
     },
     { 
-      label: "Applications", 
-      value: "1,234", 
-      change: "+156", 
+      label: "Draft Drives", 
+      value: drives.filter(d => d.status === "draft").length.toString(), 
+      change: "", 
       trend: "up", 
       icon: FileText,
-      color: "success"
+      color: "warning"
     },
     { 
-      label: "Candidates Hired", 
-      value: "89", 
-      change: "+8", 
+      label: "Completed", 
+      value: drives.filter(d => d.status === "completed").length.toString(), 
+      change: "", 
       trend: "up", 
       icon: Users,
       color: "secondary"
-    },
-  ];
-
-  const activeDrives = [
-    { 
-      id: 1, 
-      title: "Software Engineer - Full Stack", 
-      type: "Full-time", 
-      colleges: 15, 
-      applications: 234, 
-      stage: "Interview",
-      progress: 75 
-    },
-    { 
-      id: 2, 
-      title: "Product Design Intern", 
-      type: "Internship", 
-      colleges: 8, 
-      applications: 156, 
-      stage: "Test",
-      progress: 45 
-    },
-    { 
-      id: 3, 
-      title: "Data Analyst", 
-      type: "Full-time", 
-      colleges: 12, 
-      applications: 89, 
-      stage: "Applications",
-      progress: 25 
     },
   ];
 
@@ -92,6 +91,14 @@ const CompanyDashboard = () => {
     { id: 2, title: "Campus Visit - NIT Trichy", date: "Tomorrow, 10:00 AM", type: "Visit" },
     { id: 3, title: "Online Assessment", date: "Feb 5, 9:00 AM", type: "Test" },
   ];
+
+  if (companyLoading || isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin w-8 h-8 border-4 border-accent border-t-transparent rounded-full" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -115,17 +122,19 @@ const CompanyDashboard = () => {
                   <div>
                     <p className="text-sm text-muted-foreground mb-1">{stat.label}</p>
                     <p className="text-3xl font-bold">{stat.value}</p>
-                    <div className="flex items-center gap-1 mt-1">
-                      {stat.trend === "up" ? (
-                        <ArrowUpRight className="w-4 h-4 text-success" />
-                      ) : (
-                        <ArrowDownRight className="w-4 h-4 text-destructive" />
-                      )}
-                      <span className={`text-sm font-medium ${stat.trend === "up" ? "text-success" : "text-destructive"}`}>
-                        {stat.change}
-                      </span>
-                      <span className="text-xs text-muted-foreground">this month</span>
-                    </div>
+                    {stat.change && (
+                      <div className="flex items-center gap-1 mt-1">
+                        {stat.trend === "up" ? (
+                          <ArrowUpRight className="w-4 h-4 text-success" />
+                        ) : (
+                          <ArrowDownRight className="w-4 h-4 text-destructive" />
+                        )}
+                        <span className={`text-sm font-medium ${stat.trend === "up" ? "text-success" : "text-destructive"}`}>
+                          {stat.change}
+                        </span>
+                        <span className="text-xs text-muted-foreground">total</span>
+                      </div>
+                    )}
                   </div>
                   <div className={`w-12 h-12 rounded-xl bg-${stat.color}/10 flex items-center justify-center`}>
                     <stat.icon className={`w-6 h-6 text-${stat.color}`} />
@@ -147,7 +156,7 @@ const CompanyDashboard = () => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-4">
               <div>
-                <CardTitle className="text-lg">Active Hiring Drives</CardTitle>
+                <CardTitle className="text-lg">Your Hiring Drives</CardTitle>
                 <CardDescription>Track progress of your ongoing drives</CardDescription>
               </div>
               <Button variant="outline" size="sm" asChild>
@@ -155,41 +164,53 @@ const CompanyDashboard = () => {
               </Button>
             </CardHeader>
             <CardContent className="space-y-4">
-              {activeDrives.map((drive) => (
-                <div
-                  key={drive.id}
-                  className="p-4 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <h4 className="font-semibold">{drive.title}</h4>
-                      <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground">
-                        <span className="flex items-center gap-1">
-                          <Building2 className="w-3.5 h-3.5" />
-                          {drive.colleges} colleges
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Users className="w-3.5 h-3.5" />
-                          {drive.applications} applications
-                        </span>
-                      </div>
-                    </div>
-                    <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
-                      drive.type === "Full-time" 
-                        ? "bg-accent/10 text-accent" 
-                        : "bg-secondary/50 text-secondary-foreground"
-                    }`}>
-                      {drive.type}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Progress value={drive.progress} className="h-2 flex-1" />
-                    <span className="text-sm font-medium text-muted-foreground">
-                      {drive.stage}
-                    </span>
-                  </div>
+              {drives.length === 0 ? (
+                <div className="text-center py-8">
+                  <Briefcase className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+                  <p className="text-muted-foreground mb-4">No hiring drives yet</p>
+                  <Button variant="accent" asChild>
+                    <Link to="/company/drives/new">Create Your First Drive</Link>
+                  </Button>
                 </div>
-              ))}
+              ) : (
+                drives.map((drive) => (
+                  <Link
+                    key={drive.id}
+                    to={`/company/drives/${drive.id}`}
+                    className="block p-4 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <div>
+                        <h4 className="font-semibold">{drive.title}</h4>
+                        <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <Building2 className="w-3.5 h-3.5" />
+                            {drive.location || "Remote"}
+                          </span>
+                          {drive.salary_min && drive.salary_max && (
+                            <span>₹{drive.salary_min}-{drive.salary_max} LPA</span>
+                          )}
+                        </div>
+                      </div>
+                      <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
+                        drive.status === "active" 
+                          ? "bg-success/10 text-success" 
+                          : drive.status === "draft"
+                          ? "bg-warning/10 text-warning"
+                          : "bg-secondary/50 text-secondary-foreground"
+                      }`}>
+                        {drive.status || "draft"}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Progress value={drive.status === "active" ? 50 : drive.status === "completed" ? 100 : 10} className="h-2 flex-1" />
+                      <span className="text-sm font-medium text-muted-foreground capitalize">
+                        {drive.status || "draft"}
+                      </span>
+                    </div>
+                  </Link>
+                ))
+              )}
             </CardContent>
           </Card>
         </motion.div>

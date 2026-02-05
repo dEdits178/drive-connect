@@ -10,7 +10,8 @@ import {
   Plus,
   X,
   Building2,
-  CheckCircle
+  CheckCircle,
+  Loader2
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -20,6 +21,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { supabase } from "@/integrations/supabase/client";
+import { useCompany } from "@/hooks/useCompany";
+import { toast } from "sonner";
 
 const steps = [
   { id: 1, title: "Job Details", description: "Basic information about the role" },
@@ -29,29 +33,93 @@ const steps = [
 
 const CreateDrive = () => {
   const navigate = useNavigate();
+  const { company, isLoading: companyLoading } = useCompany();
   const [currentStep, setCurrentStep] = useState(1);
-  const [skills, setSkills] = useState<string[]>(["React", "TypeScript"]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Form state
+  const [formData, setFormData] = useState({
+    title: "",
+    job_type: "fulltime",
+    salary_min: "",
+    salary_max: "",
+    location: "",
+    description: "",
+    skills: ["React", "TypeScript"] as string[],
+    eligibility_branches: ["cse"] as string[],
+    min_cgpa: "",
+    year_of_passing: "2025",
+    experience_level: "fresher",
+    backlog_allowed: false,
+  });
   const [newSkill, setNewSkill] = useState("");
 
   const addSkill = () => {
-    if (newSkill && !skills.includes(newSkill)) {
-      setSkills([...skills, newSkill]);
+    if (newSkill && !formData.skills.includes(newSkill)) {
+      setFormData({ ...formData, skills: [...formData.skills, newSkill] });
       setNewSkill("");
     }
   };
 
   const removeSkill = (skill: string) => {
-    setSkills(skills.filter(s => s !== skill));
+    setFormData({ ...formData, skills: formData.skills.filter(s => s !== skill) });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
     if (currentStep < 3) {
       setCurrentStep(currentStep + 1);
-    } else {
-      navigate("/company/colleges");
+      return;
+    }
+
+    if (!company) {
+      toast.error("Company not found. Please try again.");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const { data, error } = await supabase.from("hiring_drives").insert({
+        company_id: company.id,
+        title: formData.title,
+        job_type: formData.job_type,
+        salary_min: formData.salary_min ? parseInt(formData.salary_min) : null,
+        salary_max: formData.salary_max ? parseInt(formData.salary_max) : null,
+        location: formData.location || null,
+        description: formData.description || null,
+        skills: formData.skills.length > 0 ? formData.skills : null,
+        eligibility_branches: formData.eligibility_branches.length > 0 ? formData.eligibility_branches : null,
+        min_cgpa: formData.min_cgpa ? parseFloat(formData.min_cgpa) : null,
+        year_of_passing: formData.year_of_passing ? parseInt(formData.year_of_passing) : null,
+        experience_level: formData.experience_level || null,
+        backlog_allowed: formData.backlog_allowed,
+        status: "draft",
+      }).select().single();
+
+      if (error) {
+        console.error("Error creating drive:", error);
+        toast.error("Failed to create drive. Please try again.");
+      } else {
+        toast.success("Hiring drive created successfully!");
+        navigate("/company/colleges");
+      }
+    } catch (err) {
+      console.error("Error:", err);
+      toast.error("An error occurred. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
+
+  if (companyLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin w-8 h-8 border-4 border-accent border-t-transparent rounded-full" />
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -128,12 +196,22 @@ const CreateDrive = () => {
                       <Label htmlFor="roleName">Role Name *</Label>
                       <div className="relative">
                         <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <Input id="roleName" placeholder="e.g., Software Engineer" className="pl-10" required />
+                        <Input 
+                          id="roleName" 
+                          placeholder="e.g., Software Engineer" 
+                          className="pl-10" 
+                          required 
+                          value={formData.title}
+                          onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                        />
                       </div>
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="jobType">Job Type *</Label>
-                      <Select defaultValue="fulltime">
+                      <Select 
+                        value={formData.job_type}
+                        onValueChange={(value) => setFormData({ ...formData, job_type: value })}
+                      >
                         <SelectTrigger>
                           <SelectValue placeholder="Select type" />
                         </SelectTrigger>
@@ -148,25 +226,54 @@ const CreateDrive = () => {
 
                   <div className="grid md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="salary">Salary Range (LPA) *</Label>
+                      <Label htmlFor="salaryMin">Minimum Salary (LPA)</Label>
                       <div className="relative">
                         <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <Input id="salary" placeholder="e.g., 8-12" className="pl-10" required />
+                        <Input 
+                          id="salaryMin" 
+                          type="number"
+                          placeholder="e.g., 8" 
+                          className="pl-10" 
+                          value={formData.salary_min}
+                          onChange={(e) => setFormData({ ...formData, salary_min: e.target.value })}
+                        />
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="location">Location *</Label>
+                      <Label htmlFor="salaryMax">Maximum Salary (LPA)</Label>
                       <div className="relative">
-                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <Input id="location" placeholder="e.g., Bangalore, Remote" className="pl-10" required />
+                        <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input 
+                          id="salaryMax" 
+                          type="number"
+                          placeholder="e.g., 12" 
+                          className="pl-10" 
+                          value={formData.salary_max}
+                          onChange={(e) => setFormData({ ...formData, salary_max: e.target.value })}
+                        />
                       </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="location">Location *</Label>
+                    <div className="relative">
+                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input 
+                        id="location" 
+                        placeholder="e.g., Bangalore, Remote" 
+                        className="pl-10" 
+                        required 
+                        value={formData.location}
+                        onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                      />
                     </div>
                   </div>
 
                   <div className="space-y-2">
                     <Label>Skills Required</Label>
                     <div className="flex flex-wrap gap-2 mb-2">
-                      {skills.map((skill) => (
+                      {formData.skills.map((skill) => (
                         <span 
                           key={skill}
                           className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-accent/10 text-accent text-sm"
@@ -197,6 +304,8 @@ const CreateDrive = () => {
                       id="description" 
                       placeholder="Describe the role, responsibilities, and expectations..."
                       rows={4}
+                      value={formData.description}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     />
                   </div>
                 </>
@@ -207,7 +316,10 @@ const CreateDrive = () => {
                   <div className="grid md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="branch">Branch/Stream *</Label>
-                      <Select defaultValue="cse">
+                      <Select 
+                        value={formData.eligibility_branches[0] || "cse"}
+                        onValueChange={(value) => setFormData({ ...formData, eligibility_branches: [value] })}
+                      >
                         <SelectTrigger>
                           <SelectValue placeholder="Select branch" />
                         </SelectTrigger>
@@ -224,7 +336,18 @@ const CreateDrive = () => {
                       <Label htmlFor="cgpa">Minimum CGPA *</Label>
                       <div className="relative">
                         <GraduationCap className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <Input id="cgpa" type="number" step="0.1" min="0" max="10" placeholder="e.g., 7.0" className="pl-10" required />
+                        <Input 
+                          id="cgpa" 
+                          type="number" 
+                          step="0.1" 
+                          min="0" 
+                          max="10" 
+                          placeholder="e.g., 7.0" 
+                          className="pl-10" 
+                          required 
+                          value={formData.min_cgpa}
+                          onChange={(e) => setFormData({ ...formData, min_cgpa: e.target.value })}
+                        />
                       </div>
                     </div>
                   </div>
@@ -232,7 +355,10 @@ const CreateDrive = () => {
                   <div className="grid md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="passingYear">Year of Passing *</Label>
-                      <Select defaultValue="2025">
+                      <Select 
+                        value={formData.year_of_passing}
+                        onValueChange={(value) => setFormData({ ...formData, year_of_passing: value })}
+                      >
                         <SelectTrigger>
                           <SelectValue placeholder="Select year" />
                         </SelectTrigger>
@@ -245,7 +371,10 @@ const CreateDrive = () => {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="experience">Experience Level</Label>
-                      <Select defaultValue="fresher">
+                      <Select 
+                        value={formData.experience_level}
+                        onValueChange={(value) => setFormData({ ...formData, experience_level: value })}
+                      >
                         <SelectTrigger>
                           <SelectValue placeholder="Select level" />
                         </SelectTrigger>
@@ -265,14 +394,10 @@ const CreateDrive = () => {
                         <p className="text-sm font-medium">Allow Active Backlogs</p>
                         <p className="text-xs text-muted-foreground">Students with active backlogs can apply</p>
                       </div>
-                      <Switch />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium">Gap Year Allowed</p>
-                        <p className="text-xs text-muted-foreground">Students with education gaps can apply</p>
-                      </div>
-                      <Switch defaultChecked />
+                      <Switch 
+                        checked={formData.backlog_allowed}
+                        onCheckedChange={(checked) => setFormData({ ...formData, backlog_allowed: checked })}
+                      />
                     </div>
                   </div>
                 </>
@@ -331,8 +456,15 @@ const CreateDrive = () => {
             ) : (
               <div />
             )}
-            <Button type="submit" variant="accent">
-              {currentStep === 3 ? "Create Drive & Select Colleges" : "Continue"}
+            <Button type="submit" variant="accent" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Creating...
+                </>
+              ) : (
+                currentStep === 3 ? "Create Drive & Select Colleges" : "Continue"
+              )}
             </Button>
           </div>
         </form>
