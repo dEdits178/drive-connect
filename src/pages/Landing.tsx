@@ -28,8 +28,9 @@ const Landing = () => {
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
         <div className="container mx-auto px-6 h-16 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2">
-            <img src={freshbitLogo} alt="Freshbit" className="h-8 w-auto" />
+          <Link to="/" className="flex items-center gap-0">
+            <img src={freshbitLogo} alt="Freshbit" className="h-12 w-auto" />
+            <span className="font-bold text-lg text-foreground -ml-5 -mt-1">freshbit</span>
           </Link>
           <nav className="hidden md:flex items-center gap-8">
             <a href="#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Features</a>
