@@ -1,9 +1,10 @@
 import { motion } from "framer-motion";
-import { Building2, ArrowRight, Briefcase, TrendingUp, Moon, Sun } from "lucide-react";
+import { Building2, ArrowRight, TrendingUp, Moon, Sun } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useTheme } from "@/hooks/useTheme";
+import freshbitLogo from "@/assets/freshbit-logo.png";
 
 const fadeUp = {
   initial: { opacity: 0, y: 20 },
@@ -27,12 +28,9 @@ const Landing = () => {
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
         <div className="container mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-accent flex items-center justify-center">
-              <Briefcase className="w-4 h-4 text-accent-foreground" />
-            </div>
-            <span className="font-semibold text-lg">Freshbit</span>
-          </div>
+          <Link to="/" className="flex items-center gap-2">
+            <img src={freshbitLogo} alt="Freshbit" className="h-8 w-auto" />
+          </Link>
           <nav className="hidden md:flex items-center gap-8">
             <a href="#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Features</a>
             <a href="#how-it-works" className="text-sm text-muted-foreground hover:text-foreground transition-colors">How it Works</a>
@@ -242,12 +240,9 @@ const Landing = () => {
       <footer className="py-12 px-6 border-t border-border" id="contact">
         <div className="container mx-auto max-w-6xl">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-accent flex items-center justify-center">
-                <Briefcase className="w-4 h-4 text-accent-foreground" />
-              </div>
-              <span className="font-semibold">Freshbit</span>
-            </div>
+            <Link to="/" className="flex items-center gap-2">
+              <img src={freshbitLogo} alt="Freshbit" className="h-8 w-auto" />
+            </Link>
             <div className="flex items-center gap-6 text-sm text-muted-foreground">
               <a href="#" className="hover:text-foreground transition-colors">Privacy Policy</a>
               <a href="#" className="hover:text-foreground transition-colors">Terms of Service</a>
