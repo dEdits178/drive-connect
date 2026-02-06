@@ -9,7 +9,6 @@ import {
   Upload,
   Plus,
   X,
-  Building2,
   CheckCircle,
   Loader2
 } from "lucide-react";
@@ -21,6 +20,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useCompany } from "@/hooks/useCompany";
 import { toast } from "sonner";
@@ -30,6 +30,51 @@ const steps = [
   { id: 2, title: "Eligibility", description: "Define candidate requirements" },
   { id: 3, title: "Documents", description: "Upload relevant files" },
 ];
+
+// Available branches grouped by degree type
+const branchOptions = {
+  "B.Tech/B.E": [
+    { value: "cse", label: "Computer Science & Engineering" },
+    { value: "ece", label: "Electronics & Communication" },
+    { value: "eee", label: "Electrical Engineering" },
+    { value: "mech", label: "Mechanical Engineering" },
+    { value: "civil", label: "Civil Engineering" },
+    { value: "chem", label: "Chemical Engineering" },
+    { value: "it", label: "Information Technology" },
+    { value: "aiml", label: "AI & Machine Learning" },
+    { value: "data", label: "Data Science" },
+  ],
+  "B.Com": [
+    { value: "bcom_general", label: "B.Com General" },
+    { value: "bcom_hons", label: "B.Com Honours" },
+    { value: "bcom_ca", label: "B.Com Computer Applications" },
+  ],
+  "B.Sc": [
+    { value: "bsc_cs", label: "B.Sc Computer Science" },
+    { value: "bsc_it", label: "B.Sc IT" },
+    { value: "bsc_maths", label: "B.Sc Mathematics" },
+    { value: "bsc_physics", label: "B.Sc Physics" },
+    { value: "bsc_stats", label: "B.Sc Statistics" },
+  ],
+  "B.A": [
+    { value: "ba_eco", label: "B.A Economics" },
+    { value: "ba_english", label: "B.A English" },
+    { value: "ba_psych", label: "B.A Psychology" },
+  ],
+  "MBA": [
+    { value: "mba_finance", label: "MBA Finance" },
+    { value: "mba_marketing", label: "MBA Marketing" },
+    { value: "mba_hr", label: "MBA HR" },
+    { value: "mba_operations", label: "MBA Operations" },
+  ],
+  "MCA": [
+    { value: "mca", label: "MCA" },
+  ],
+  "M.Tech": [
+    { value: "mtech_cse", label: "M.Tech CSE" },
+    { value: "mtech_ece", label: "M.Tech ECE" },
+  ],
+};
 
 const CreateDrive = () => {
   const navigate = useNavigate();
@@ -45,14 +90,16 @@ const CreateDrive = () => {
     salary_max: "",
     location: "",
     description: "",
-    skills: ["React", "TypeScript"] as string[],
-    eligibility_branches: ["cse"] as string[],
+    skills: [] as string[],
+    eligibility_branches: [] as string[],
     min_cgpa: "",
     year_of_passing: "2025",
     experience_level: "fresher",
     backlog_allowed: false,
+    documents_required: [] as string[],
   });
   const [newSkill, setNewSkill] = useState("");
+  const [newDocument, setNewDocument] = useState("");
 
   const addSkill = () => {
     if (newSkill && !formData.skills.includes(newSkill)) {
@@ -63,6 +110,35 @@ const CreateDrive = () => {
 
   const removeSkill = (skill: string) => {
     setFormData({ ...formData, skills: formData.skills.filter(s => s !== skill) });
+  };
+
+  const addBranch = (branchValue: string) => {
+    if (!formData.eligibility_branches.includes(branchValue)) {
+      setFormData({ ...formData, eligibility_branches: [...formData.eligibility_branches, branchValue] });
+    }
+  };
+
+  const removeBranch = (branch: string) => {
+    setFormData({ ...formData, eligibility_branches: formData.eligibility_branches.filter(b => b !== branch) });
+  };
+
+  const addDocument = () => {
+    if (newDocument && !formData.documents_required.includes(newDocument)) {
+      setFormData({ ...formData, documents_required: [...formData.documents_required, newDocument] });
+      setNewDocument("");
+    }
+  };
+
+  const removeDocument = (doc: string) => {
+    setFormData({ ...formData, documents_required: formData.documents_required.filter(d => d !== doc) });
+  };
+
+  const getBranchLabel = (value: string) => {
+    for (const degree of Object.values(branchOptions)) {
+      const found = degree.find(b => b.value === value);
+      if (found) return found.label;
+    }
+    return value;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -274,15 +350,16 @@ const CreateDrive = () => {
                     <Label>Skills Required</Label>
                     <div className="flex flex-wrap gap-2 mb-2">
                       {formData.skills.map((skill) => (
-                        <span 
+                        <Badge 
                           key={skill}
-                          className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-accent/10 text-accent text-sm"
+                          variant="secondary"
+                          className="gap-1"
                         >
                           {skill}
-                          <button type="button" onClick={() => removeSkill(skill)} className="hover:text-accent-foreground">
+                          <button type="button" onClick={() => removeSkill(skill)} className="hover:text-destructive">
                             <X className="w-3 h-3" />
                           </button>
-                        </span>
+                        </Badge>
                       ))}
                     </div>
                     <div className="flex gap-2">
@@ -299,11 +376,12 @@ const CreateDrive = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="description">Job Description</Label>
+                    <Label htmlFor="description">Job Description *</Label>
                     <Textarea 
                       id="description" 
                       placeholder="Describe the role, responsibilities, and expectations..."
                       rows={4}
+                      required
                       value={formData.description}
                       onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     />
@@ -313,25 +391,59 @@ const CreateDrive = () => {
 
               {currentStep === 2 && (
                 <>
-                  <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="branch">Branch/Stream *</Label>
-                      <Select 
-                        value={formData.eligibility_branches[0] || "cse"}
-                        onValueChange={(value) => setFormData({ ...formData, eligibility_branches: [value] })}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select branch" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="cse">Computer Science</SelectItem>
-                          <SelectItem value="ece">Electronics & Communication</SelectItem>
-                          <SelectItem value="eee">Electrical Engineering</SelectItem>
-                          <SelectItem value="mech">Mechanical Engineering</SelectItem>
-                          <SelectItem value="all">All Branches</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <Label>Eligible Branches/Streams *</Label>
+                      <p className="text-sm text-muted-foreground">Select multiple branches from different degree types</p>
+                      
+                      {/* Selected branches */}
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        {formData.eligibility_branches.map((branch) => (
+                          <Badge 
+                            key={branch}
+                            variant="default"
+                            className="gap-1"
+                          >
+                            {getBranchLabel(branch)}
+                            <button type="button" onClick={() => removeBranch(branch)} className="hover:text-destructive">
+                              <X className="w-3 h-3" />
+                            </button>
+                          </Badge>
+                        ))}
+                        {formData.eligibility_branches.length === 0 && (
+                          <span className="text-sm text-muted-foreground">No branches selected</span>
+                        )}
+                      </div>
+
+                      {/* Branch selection by degree type */}
+                      <div className="grid gap-4">
+                        {Object.entries(branchOptions).map(([degreeType, branches]) => (
+                          <div key={degreeType} className="space-y-2">
+                            <Label className="text-xs text-muted-foreground">{degreeType}</Label>
+                            <div className="flex flex-wrap gap-2">
+                              {branches.map((branch) => (
+                                <Button
+                                  key={branch.value}
+                                  type="button"
+                                  variant={formData.eligibility_branches.includes(branch.value) ? "default" : "outline"}
+                                  size="sm"
+                                  onClick={() => 
+                                    formData.eligibility_branches.includes(branch.value) 
+                                      ? removeBranch(branch.value) 
+                                      : addBranch(branch.value)
+                                  }
+                                >
+                                  {branch.label}
+                                </Button>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
+                  </div>
+
+                  <div className="grid md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="cgpa">Minimum CGPA *</Label>
                       <div className="relative">
@@ -350,9 +462,6 @@ const CreateDrive = () => {
                         />
                       </div>
                     </div>
-                  </div>
-
-                  <div className="grid md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="passingYear">Year of Passing *</Label>
                       <Select 
@@ -366,9 +475,13 @@ const CreateDrive = () => {
                           <SelectItem value="2024">2024</SelectItem>
                           <SelectItem value="2025">2025</SelectItem>
                           <SelectItem value="2026">2026</SelectItem>
+                          <SelectItem value="2027">2027</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
+                  </div>
+
+                  <div className="grid md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="experience">Experience Level</Label>
                       <Select 
@@ -406,67 +519,111 @@ const CreateDrive = () => {
               {currentStep === 3 && (
                 <>
                   <div className="space-y-4">
-                    {[
-                      { label: "Job Description (PDF)", desc: "Detailed JD document" },
-                      { label: "Test Guidelines", desc: "Assessment instructions" },
-                      { label: "Company Brochure", desc: "About your company" },
-                    ].map((doc) => (
-                      <div 
-                        key={doc.label}
-                        className="flex items-center justify-between p-4 rounded-xl border border-dashed border-border hover:border-accent/50 transition-colors"
-                      >
-                        <div>
-                          <p className="font-medium text-sm">{doc.label}</p>
-                          <p className="text-xs text-muted-foreground">{doc.desc}</p>
-                        </div>
-                        <Button type="button" variant="outline" size="sm">
-                          <Upload className="w-4 h-4 mr-1" />
-                          Upload
+                    <div className="space-y-2">
+                      <Label>Documents Required from Candidates</Label>
+                      <p className="text-sm text-muted-foreground">Specify what documents candidates should submit</p>
+                      
+                      <div className="flex flex-wrap gap-2 mb-2">
+                        {formData.documents_required.map((doc) => (
+                          <Badge 
+                            key={doc}
+                            variant="secondary"
+                            className="gap-1"
+                          >
+                            {doc}
+                            <button type="button" onClick={() => removeDocument(doc)} className="hover:text-destructive">
+                              <X className="w-3 h-3" />
+                            </button>
+                          </Badge>
+                        ))}
+                      </div>
+                      
+                      <div className="flex gap-2">
+                        <Input 
+                          placeholder="e.g., Resume, Marksheets, ID Proof" 
+                          value={newDocument}
+                          onChange={(e) => setNewDocument(e.target.value)}
+                          onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), addDocument())}
+                        />
+                        <Button type="button" variant="outline" onClick={addDocument}>
+                          <Plus className="w-4 h-4" />
                         </Button>
                       </div>
-                    ))}
-                  </div>
 
-                  <div className="p-4 rounded-xl bg-accent/10 border border-accent/20">
-                    <div className="flex items-start gap-3">
-                      <Building2 className="w-5 h-5 text-accent mt-0.5" />
-                      <div>
-                        <p className="font-medium text-sm">Next: Select Colleges</p>
-                        <p className="text-xs text-muted-foreground">
-                          After creating this drive, you'll be able to select and invite colleges to participate.
-                        </p>
+                      {/* Quick add buttons */}
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {["Resume", "Marksheets", "ID Proof", "Photo", "Pan Card", "Aadhar"].map((doc) => (
+                          <Button
+                            key={doc}
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            disabled={formData.documents_required.includes(doc)}
+                            onClick={() => setFormData({ ...formData, documents_required: [...formData.documents_required, doc] })}
+                          >
+                            + {doc}
+                          </Button>
+                        ))}
                       </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      {[
+                        { label: "Job Description (PDF)", desc: "Detailed JD document" },
+                        { label: "Test Guidelines", desc: "Assessment instructions" },
+                        { label: "Company Brochure", desc: "About your company" },
+                      ].map((doc) => (
+                        <div 
+                          key={doc.label}
+                          className="flex items-center justify-between p-4 rounded-xl border border-dashed border-border hover:border-accent/50 transition-colors"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
+                              <Upload className="w-5 h-5 text-muted-foreground" />
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium">{doc.label}</p>
+                              <p className="text-xs text-muted-foreground">{doc.desc}</p>
+                            </div>
+                          </div>
+                          <Button type="button" variant="outline" size="sm">
+                            Upload
+                          </Button>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </>
               )}
+
+              {/* Navigation Buttons */}
+              <div className="flex items-center justify-between pt-4 border-t">
+                {currentStep > 1 ? (
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => setCurrentStep(currentStep - 1)}
+                  >
+                    Previous
+                  </Button>
+                ) : (
+                  <div />
+                )}
+                <Button type="submit" variant="accent" disabled={isSubmitting}>
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Creating...
+                    </>
+                  ) : currentStep < 3 ? (
+                    "Continue"
+                  ) : (
+                    "Create Drive"
+                  )}
+                </Button>
+              </div>
             </CardContent>
           </Card>
-
-          {/* Actions */}
-          <div className="flex items-center justify-between mt-6">
-            {currentStep > 1 ? (
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => setCurrentStep(currentStep - 1)}
-              >
-                Previous
-              </Button>
-            ) : (
-              <div />
-            )}
-            <Button type="submit" variant="accent" disabled={isSubmitting}>
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Creating...
-                </>
-              ) : (
-                currentStep === 3 ? "Create Drive & Select Colleges" : "Continue"
-              )}
-            </Button>
-          </div>
         </form>
       </motion.div>
     </div>

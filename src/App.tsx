@@ -25,6 +25,7 @@ import AdminLayout from "./components/layouts/AdminLayout";
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminEmails from "./pages/admin/AdminEmails";
 import AdminColleges from "./pages/admin/AdminColleges";
+import AdminCompanies from "./pages/admin/AdminCompanies";
 
 const queryClient = new QueryClient();
 
@@ -62,7 +63,7 @@ const App = () => (
             <Route path="/admin" element={<AdminLayout />}>
               <Route path="dashboard" element={<AdminDashboard />} />
               <Route path="emails" element={<AdminEmails />} />
-              <Route path="companies" element={<PlaceholderPage title="Companies Management" />} />
+              <Route path="companies" element={<AdminCompanies />} />
               <Route path="colleges" element={<AdminColleges />} />
               <Route path="drives" element={<PlaceholderPage title="All Drives" />} />
               <Route path="users" element={<PlaceholderPage title="Users Management" />} />

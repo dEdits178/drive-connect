@@ -8,7 +8,6 @@ import {
   Users, 
   Settings,
   LogOut,
-  Shield,
   Menu,
   X,
   ChevronRight,
@@ -17,6 +16,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
+import freshbitLogo from "@/assets/freshbit-logo.png";
 
 const AdminLayout = () => {
   const navigate = useNavigate();
@@ -63,12 +63,10 @@ const AdminLayout = () => {
     <div className="min-h-screen bg-background">
       {/* Mobile Header */}
       <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-card border-b z-50 flex items-center justify-between px-4">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-            <Shield className="w-4 h-4 text-primary-foreground" />
-          </div>
-          <span className="font-semibold">Freshbit Admin</span>
-        </div>
+        <Link to="/admin/dashboard" className="flex items-center gap-2">
+          <img src={freshbitLogo} alt="Freshbit" className="h-8 w-auto" />
+          <span className="font-semibold text-xs text-accent">Admin</span>
+        </Link>
         <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(!sidebarOpen)}>
           {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </Button>
@@ -81,12 +79,10 @@ const AdminLayout = () => {
       )}>
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="h-16 flex items-center gap-2 px-6 border-b">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-              <Shield className="w-4 h-4 text-primary-foreground" />
-            </div>
-            <span className="font-semibold">Freshbit Admin</span>
-          </div>
+          <Link to="/admin/dashboard" className="h-16 flex items-center gap-2 px-6 border-b">
+            <img src={freshbitLogo} alt="Freshbit" className="h-8 w-auto" />
+            <span className="font-semibold text-xs text-accent">Admin</span>
+          </Link>
 
           {/* Navigation */}
           <nav className="flex-1 p-4 space-y-1">

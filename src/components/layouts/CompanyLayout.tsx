@@ -22,6 +22,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
+import freshbitLogo from "@/assets/freshbit-logo.png";
 
 const navigation = [
   { name: "Dashboard", href: "/company/dashboard", icon: LayoutDashboard },
@@ -78,19 +79,9 @@ const CompanyLayout = () => {
       >
         {/* Logo */}
         <div className="h-16 flex items-center justify-between px-4 border-b border-sidebar-border">
-          {!collapsed && (
-            <Link to="/company/dashboard" className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-sidebar-primary flex items-center justify-center">
-                <Briefcase className="w-4 h-4 text-sidebar-primary-foreground" />
-              </div>
-              <span className="font-semibold text-sidebar-foreground">Freshbit</span>
-            </Link>
-          )}
-          {collapsed && (
-            <div className="w-8 h-8 rounded-lg bg-sidebar-primary flex items-center justify-center mx-auto">
-              <Briefcase className="w-4 h-4 text-sidebar-primary-foreground" />
-            </div>
-          )}
+          <Link to="/company/dashboard" className="flex items-center gap-2">
+            <img src={freshbitLogo} alt="Freshbit" className={cn("h-8 w-auto", collapsed && "mx-auto")} />
+          </Link>
         </div>
 
         {/* Navigation */}
